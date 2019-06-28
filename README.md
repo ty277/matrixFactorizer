@@ -18,5 +18,8 @@ package WIP
 TODO:
 - add test case
 - detect divergence
+- use input lr as initial learn rate, add some simple line search
 - investigate dynamic initialization/warm start?
-- support distributed data on spark
+- necessary to add L1 penalty?
+- add 2nd order optimization (coordinate descent with exact Hessian) as an option
+- support distributed data on spasrk
