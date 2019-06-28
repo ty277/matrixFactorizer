@@ -61,8 +61,8 @@ class MatrixFactorizer():
             for i, j, r_ij in input_lst:
                 e_ij = r_ij - np.dot(self.P[i, :], self.Q[:, j])  # current error
                 for k in range(self.K):
-                    self.P[i, k] = self.P[i, k] + lr * (2 * e_ij * self.Q[k, j] - lam * self.P[i, k])
-                    self.Q[k, j] = self.Q[k, j] + lr * (2 * e_ij * self.P[i, k] - lam * self.Q[k, j])
+                    self.P[i, k] = self.P[i, k] + self.lr * (2 * e_ij * self.Q[k, j] - self.lam * self.P[i, k])
+                    self.Q[k, j] = self.Q[k, j] + self.lr * (2 * e_ij * self.P[i, k] - self.lam * self.Q[k, j])
 
             # update loss
             loss = self.__calc_loss(input_lst, self.P, self.Q, self.lam)  # updated avg squared error
