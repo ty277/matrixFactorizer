@@ -6,12 +6,10 @@ log.addHandler(logging.NullHandler())
 
 
 class MatrixFactorizer():
-    def __init__(self, N, M, K, lr, lam=0.01, tol=1e-3, maxIter=1000, rnd_seed=54321):
+    def __init__(self, lr=0.0001, lam=0.01, tol=1e-3, maxIter=1000, rnd_seed=54321):
         '''
         Approximating a NxM matrix R by P(NxK) dot Q(KxM) using first order gradient descent.
         Input data comes in as (i, j, R_ij) per row, a row exists only when there is a R_ij value.
-        N, M - dimension of the input matrix
-        K - dimension of latent variables
         lr - learning rate
         lam - L2 regularization parameter
         maxIter - max number of iterations
@@ -21,9 +19,6 @@ class MatrixFactorizer():
         # set random seed
         np.random.seed(rnd_seed)
         # initialize MF
-        self.K = K
-        self.N = N
-        self.M = M
         self.lr = lr
         self.lam = lam
         self.tol = tol
@@ -44,28 +39,32 @@ class MatrixFactorizer():
 
         return sum_sq_err / self.nrows
 
-    def train(self, input_lst, verbose_log=True):
+    def train(self, input_data, N, M, K, verbose_log=True):
         '''
-        input_lst: iterable of tuples (i, j, R_ij) where i, j is the index in the original matrix,
+        input_data: iterable of tuples (i, j, R_ij) where i, j is the index in the original matrix,
                     R_ij is the value, usually only contains elements where there is a R_ij value
                     known. e.g. input_data= [(0, 1, 2.5), (0, 2, -10.), (1, 3, -1.), ...]
-
+        N, M - dimension of the input matrix
+        K - dimension of latent variables
         '''
-        self.nrows = len(input_lst)
+        # initialization
+        self.nrows = len(input_data)
+        self.P = np.random.normal(0., K ** -.2, (N, K))
+        self.Q = np.random.normal(0., K ** -.2, (K, M))
         iteration = 0
-        self.P = np.random.normal(0., self.K ** -.2, (self.N, self.K))
-        self.Q = np.random.normal(0., self.K ** -.2, (self.K, self.M))
         # fit
         while iteration <= self.maxIter:
             # update P, Q
-            for i, j, r_ij in input_lst:
+            for i, j, r_ij in input_data:
+                if (i < 0 or i >= N or j < 0 or j >= M):
+                    raise Exception("Input index ({},{}) out of defined (NxM) range!".format(i, j))
                 e_ij = r_ij - np.dot(self.P[i, :], self.Q[:, j])  # current error
-                for k in range(self.K):
-                    self.P[i, k] = self.P[i, k] + self.lr * (2 * e_ij * self.Q[k, j] - self.lam * self.P[i, k])
-                    self.Q[k, j] = self.Q[k, j] + self.lr * (2 * e_ij * self.P[i, k] - self.lam * self.Q[k, j])
+                for k in range(K):
+                    self.P[i, k] += self.lr * (2 * e_ij * self.Q[k, j] - self.lam * self.P[i, k])
+                    self.Q[k, j] += self.lr * (2 * e_ij * self.P[i, k] - self.lam * self.Q[k, j])
 
             # update loss
-            loss = self.__calc_loss(input_lst, self.P, self.Q, self.lam)  # updated avg squared error
+            loss = self.__calc_loss(input_data, self.P, self.Q, self.lam)  # updated avg squared error
             delta_loss = self.loss - loss
             self.loss = loss
             iteration += 1

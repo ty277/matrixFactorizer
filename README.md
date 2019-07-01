@@ -10,13 +10,20 @@ $ python setup.py install
 In python script, call package like:
 ```
 import matrixFactorizer
-mf = matrixFactorizer.MatrixFactorizer(10,20,3,0.1)
+mf = matrixFactorizer.MatrixFactorizer()
+
+# train 
+mf.train(input_data=input_data, N=N, M=M, K=K)
+
+# get factorized P and Q, and approximated matrix
+P = mf.get_P()
+Q = mf.get_Q()
+R_hat = mf.get_R_est()
 ```
 
 package WIP
 
 TODO:
-- add test case
 - detect divergence
 - use input lr as initial learn rate, add some simple line search
 - investigate dynamic initialization/warm start?
